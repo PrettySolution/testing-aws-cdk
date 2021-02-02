@@ -2,8 +2,8 @@ import * as codepipeline from '@aws-cdk/aws-codepipeline';
 import * as codepipeline_actions from '@aws-cdk/aws-codepipeline-actions';
 import { Construct, SecretValue, Stack, StackProps } from '@aws-cdk/core';
 import { CdkPipeline, SimpleSynthAction } from "@aws-cdk/pipelines";
-import {CdkpipelinesDemoStack} from "./cdkpipelines-demo-stack";
 import {CdkpipelinesDemoStage} from "./cdkpipelines-demo-stage";
+import {ShellScriptAction} from "@aws-cdk/pipelines";
 
 /**
  * The stack that defines the application pipeline
@@ -40,9 +40,29 @@ export class CdkpipelinesDemoPipelineStack extends Stack {
         });
 
         // This is where we add the application stages
-        pipeline.addApplicationStage(new CdkpipelinesDemoStage(this, 'PreProd', {
+
+        //######################### PreProd #########################
+        // pipeline.addApplicationStage(new CdkpipelinesDemoStage(this, 'PreProd', {
+        //     env: {account: '268591637005', region: 'us-east-1'}
+        //     }));
+        const preprod = new CdkpipelinesDemoStage(this, 'PreProd', {
+           env: {account: '268591637005', region:'us-east-1'}
+        });
+        const preprodStage = pipeline.addApplicationStage(preprod);
+        preprodStage.addActions(new ShellScriptAction({
+            actionName: 'TestService',
+            useOutputs: {
+                ENDPOINT_URL: pipeline.stackOutput(preprod.urlOutput),
+            },
+            commands:[
+                'curl -Ssf $ENDPOINT_URL',
+            ],
+        }));
+
+        //######################### Prod #########################
+        pipeline.addApplicationStage(new CdkpipelinesDemoStage(this, 'Prod', {
             env: {account: '268591637005', region: 'us-east-1'}
-            }),
-        )
+        }));
+
     }
 }
