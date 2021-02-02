@@ -2,6 +2,8 @@ import * as codepipeline from '@aws-cdk/aws-codepipeline';
 import * as codepipeline_actions from '@aws-cdk/aws-codepipeline-actions';
 import { Construct, SecretValue, Stack, StackProps } from '@aws-cdk/core';
 import { CdkPipeline, SimpleSynthAction } from "@aws-cdk/pipelines";
+import {CdkpipelinesDemoStack} from "./cdkpipelines-demo-stack";
+import {CdkpipelinesDemoStage} from "./cdkpipelines-demo-stage";
 
 /**
  * The stack that defines the application pipeline
@@ -22,9 +24,9 @@ export class CdkpipelinesDemoPipelineStack extends Stack {
             sourceAction: new codepipeline_actions.GitHubSourceAction({
                 actionName: 'GitHub',
                 output: sourceArtifact,
-                oauthToken: SecretValue.secretsManager('github-token'),
-                owner: 'prettysolution',
-                repo: 'https://github.com/PrettySolution/cdkpipelines-demo.git',
+                oauthToken: SecretValue.secretsManager('github-pretty'),
+                owner: 'PrettySolution',
+                repo: 'cdkpipelines-demo',
             }),
 
             // How it will be built and synthesized
@@ -38,6 +40,9 @@ export class CdkpipelinesDemoPipelineStack extends Stack {
         });
 
         // This is where we add the application stages
-        // ...
+        pipeline.addApplicationStage(new CdkpipelinesDemoStage(this, 'PreProd', {
+            env: {account: '268591637005', region: 'us-east-1'}
+            }),
+        )
     }
 }
